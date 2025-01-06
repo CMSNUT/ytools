@@ -21,42 +21,75 @@ app_ui <- function(request) {
           id = "tabs",
           menuItem("生存分析", tabName = "survAnal", icon = icon("dashboard")),
           menuItem("Cox回归", tabName = "coxReg", icon = icon("dashboard")),
-          menuItem("Logistic回归", tabName = "logiReg", icon = icon("dashboard")),
-          menuItem("线性回归", tabName = "lineReg", icon = icon("dashboard"))
+          menuItem("Logistic回归", tabName = "logiReg", icon = icon("dashboard"))
         )
       ),
-      body <- dashboardBody(
+      dashboardBody(
         tabItems(
           # 生存分析 ----
           tabItem(
             "survAnal",
-            div(p("生存分析")),
-
-            tabsetPanel(
-              id = "tabs1",
+            navbarPage(
+              strong("生存分析",style = "color:blue;font-size:28px"),
               ## 生成曲线数据导入 ----
               tabPanel(
-                title = "数据导入",
-                mod_dataImport_ui("kmCurve")
+               "数据导入",
+               mod_dataImport_ui("survAnal")
+              ),
+              ## 生存曲线数据整理 ----
+              tabPanel(
+               title = "数据整理",
+               mod_dataProcess_ui("survAnal")
+              ),
+              ## 生存曲线绘制 ----
+              tabPanel(
+               title = "KM曲线",
+              )
+            )
+          ),
+
+          # cox回归 ----
+          tabItem(
+            "coxReg",
+            navbarPage(
+              strong("Cox回归分析",style = "color:blue;font-size:28px"),
+              ## cox回归数据导入 ----
+              tabPanel(
+                "数据导入",
+                mod_dataImport_ui("coxReg")
               ),
               ## 生存曲线数据整理 ----
               tabPanel(
                 title = "数据整理",
+                mod_dataProcess_ui("coxReg")
               ),
               ## 生存曲线绘制 ----
               tabPanel(
-                title = "KM曲线",
+                title = "Cox回归",
               )
             )
           ),
-          tabItem("coxReg",
-                  div(p("Cox回归"))
-          ),
-          tabItem("logiReg",
-                  div(p("Logistic回归"))
-          ),
-          tabItem("lineReg",
-                  div(p("线性回归"))
+
+          # Logistic回归 ----
+          tabItem(
+            "logiReg",
+            navbarPage(
+              strong("Logistic回归分析",style = "color:blue;font-size:28px"),
+              ## Logistic回归数据导入 ----
+              tabPanel(
+                "数据导入",
+                mod_dataImport_ui("logiReg")
+              ),
+              ## 生存曲线数据整理 ----
+              tabPanel(
+                title = "数据整理",
+                mod_dataProcess_ui("logiReg")
+              ),
+              ## 生存曲线绘制 ----
+              tabPanel(
+                title = "Logistic回归"
+              )
+            )
           )
         )
       )
