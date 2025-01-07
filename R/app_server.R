@@ -9,9 +9,10 @@ app_server <- function(input, output, session) {
   # Your application server logic
 
   # 生存分析 ----
-
-  mod_dataImport_server("survAnal")
+  data<-mod_dataImport_server("survAnal")
+  print(data)
   mod_dataProcess_server("survAnal")
+  mod_km_server("survAnal")
 
   # Cox回归分析
   mod_dataImport_server("coxReg")

@@ -44,6 +44,7 @@ app_ui <- function(request) {
               ## 生存曲线绘制 ----
               tabPanel(
                title = "KM曲线",
+               mod_km_ui("survAnal")
               )
             )
           ),
