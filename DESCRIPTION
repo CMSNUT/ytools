@@ -12,6 +12,7 @@ Imports:
     readxl,
     shiny,
     shinydashboard,
+    stringr,
     survival,
     tools
 Suggests: 

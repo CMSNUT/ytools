@@ -11,6 +11,7 @@
 #' @importFrom DT DTOutput renderDT
 #' @importFrom readxl read_xlsx read_xls
 #' @import survival
+#' @import stringr
 mod_dataImport_ui <- function(id) {
   ns <- NS(id)
   tagList(
@@ -20,16 +21,6 @@ mod_dataImport_ui <- function(id) {
       solidHeader = TRUE,
       width = 3,
       collapsible = FALSE,
-
-      # fileInput(
-      #   inputId = ns("dataSelect"),
-      #   label = strong("选择数据文件", style = "font-size:20px"),
-      #   accept = c(".csv", ".xlsx", ".xls"),
-      #   width = "100%",
-      #   buttonLabel = "浏览..."
-      # ),
-
-
 
       div(
         style = "inline-block",
@@ -47,7 +38,7 @@ mod_dataImport_ui <- function(id) {
       ),
 
       h4(strong("注意事项：")),
-      p("1.数据集变量名不要含有空格或符号如括号、※等"),
+      p("1.数据集变量名不要含有空格或符号如括号、*等"),
       p("2.支持10 M 以内的的各种格式数据集"),
       p("3.数据导入前，请仔细阅读数据集格式的介绍"),
 
@@ -95,11 +86,27 @@ mod_dataImport_server <- function(id) {
       req(file)
       validate(need(ext %in% c("csv", "xlsx", "xls"), "请导入csv 或 xlsx 或 xls格式文件"))
       if (ext == "csv") {
-        data <- read.csv(file$datapath)
+        data <- read.csv(
+          file$datapath,
+          header = input$hasTitle,
+          skip = input$titleRowNum,
+          na.strings = strsplit(input$missValue, ",")[[1]],
+        )
       } else if (ext == "xlsx") {
-        data <- read_xlsx(file$datapath)
+        data <- read_xlsx(
+          file$datapath,
+          col_names = input$hasTitle,
+          na = strsplit(input$missValue, ",")[[1]],
+          skip = input$titleRowNum,
+        )
       } else {
-        data <- read_xls(file$datapath)
+        data <- read_xls(
+          file$datapath,
+          col_names = input$hasTitle,
+          na = strsplit(input$missValue, ",")[[1]],
+          skip = input$titleRowNum,
+          n_max = 6
+        )
       }
       # df(data)
       #
@@ -109,6 +116,7 @@ mod_dataImport_server <- function(id) {
       # save(data, file = paste0("./temp/", id, "_data_import.RData"))
     })
 
+    df2 <- reactiveVal()
     df <- reactiveVal()
 
     # observeEvent(input$dataImport, {
@@ -144,7 +152,7 @@ mod_dataImport_server <- function(id) {
     })
 
 
-    # # 数据导入对话框 ----
+    # 数据导入对话框 ----
     observeEvent(input$dataImportModal, {
       showModal(modalDialog(
         # title = h4(strong("数据导入")),
@@ -197,9 +205,8 @@ mod_dataImport_server <- function(id) {
                   inputId = ns("missValue"),
                   label = "缺失值字符",
                   value = ",NA",
-                  width = "100%",
-                  placeholder = "若数据有多种缺失值符号(如NA,na,NAN,nan等)，用逗号(',')分隔,如(,NA,nan)"
-                )
+                  width = "100%"
+                ),
               ),
               column(
                 width = 6,
@@ -211,7 +218,7 @@ mod_dataImport_server <- function(id) {
                   step = 1,
                   width = "100%"
                 ),
-
+                "若数据有多种缺失值符号(如NA,na,NAN,nan等)，用逗号(',')分隔,如(,NA,nan)"
               )
             ),
 
@@ -219,9 +226,16 @@ mod_dataImport_server <- function(id) {
           ),
           tabPanel(
             title = "查看数据",
+            DT::DTOutput(ns("dataTabView"))
           ),
           tabPanel(
             title = "修改数据",
+            DT::DTOutput(ns("dataTabModify")),
+            actionButton(
+              ns("dataModifyBtn"),
+              "确定修改",
+              width = "100%"
+            )
           )
         )
 
@@ -244,14 +258,14 @@ mod_dataImport_server <- function(id) {
       removeModal()
     })
 
-
-
-
     # 数据集格式介绍对话框 ----
     observeEvent(input$dataFormatModal, {
       showModal(modalDialog(
         title = h4(strong("数据集格式介绍")),
         easy_close = TRUE,
+        footer = tagList(
+          modalButton("确定")
+        ),
         p("1.数据导入格式为csv、excel格式，数据集大小不超过10M"),
         p("2.首行是变量名，一般是英文或者拼音，不建议用汉字，更不要有 '.、/、*、% '等符号。"),
         p("3.从第二行开始，每一行都代表着一个研究对象的所有变量信息。"),
@@ -272,7 +286,60 @@ mod_dataImport_server <- function(id) {
 
     # 数据表预览 ----
     output$dataTabPreview = renderDT(
-      iris, options = list(lengthChange = FALSE)
+      head(df1()),
+      rownames = FALSE,
+      escape = FALSE,
+      options = list(
+        lengthChange = FALSE,
+        dom = 't',
+        scrollX = TRUE
+      )
+      # df1(), options = list(scrollX = TRUE)
+    )
+
+    # 数据表查看 ----
+    output$dataTabView = renderDT(
+      df1(),
+      rownames = FALSE,
+      escape = FALSE,
+      options = list(
+        lengthChange = FALSE,
+        pageLength=20,
+        dom = 'tipr',
+        scrollX = TRUE,
+        scrollY = TRUE,
+        language = list(
+          info = '显示第_START_ 至 _END_ 项结果，共 _TOTAL_ 项',
+          search = '搜索:',
+          paginate = list(previous = '上页', `next` = '下页'),
+          lengthMenu = '显示 _MENU_ 项结果')
+        )
+      # df1(), options = list(scrollX = TRUE)
+    )
+
+    # 数据修改 ----
+    output$dataTabModify = renderDT(
+      data.frame(
+        列名 = colnames(d),
+        新列名 = rep("输入新列名", each = length(d)),
+
+      ),
+      rownames = FALSE,
+      escape = FALSE,
+      colnames = c("列名"),
+      options = list(
+
+        lengthChange = FALSE,
+        pageLength=20,
+        dom = 'tipr',
+        scrollX = TRUE,
+        scrollY = TRUE,
+        language = list(
+          info = '显示第_START_ 至 _END_ 项结果，共 _TOTAL_ 项',
+          search = '搜索:',
+          paginate = list(previous = '上页', `next` = '下页'),
+          lengthMenu = '显示 _MENU_ 项结果')
+      )
       # df1(), options = list(scrollX = TRUE)
     )
 
