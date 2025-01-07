@@ -9,7 +9,7 @@
 #' @importFrom shiny NS tagList
 #' @importFrom shinydashboard box
 #' @importFrom DT DTOutput renderDT
-#' @importFrom readxl read_xlsx
+#' @importFrom readxl read_xlsx read_xls
 #' @import survival
 mod_dataImport_ui <- function(id) {
   ns <- NS(id)
@@ -21,19 +21,21 @@ mod_dataImport_ui <- function(id) {
       width = 3,
       collapsible = FALSE,
 
-      fileInput(
-        inputId = ns("dataSelect"),
-        label = strong("选择数据文件", style = "font-size:20px"),
-        accept = c(".csv", ".xlsx", ".xls"),
-        width = "100%",
-        buttonLabel = "浏览..."
-      ),
+      # fileInput(
+      #   inputId = ns("dataSelect"),
+      #   label = strong("选择数据文件", style = "font-size:20px"),
+      #   accept = c(".csv", ".xlsx", ".xls"),
+      #   width = "100%",
+      #   buttonLabel = "浏览..."
+      # ),
+
+
 
       div(
         style = "inline-block",
         actionButton(
-          inputId = ns("dataImport"),
-          label = "加载数据",
+          inputId = ns("dataImportModal"),
+          label = "打开我的数据",
           class = "btn-success",
           icon = icon("arrow-up-from-bracket")
         ),
@@ -87,10 +89,7 @@ mod_dataImport_ui <- function(id) {
 mod_dataImport_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
-    df <- reactiveVal()
-
-    observeEvent(input$dataImport, {
+    df1 <- reactive({
       file <- input$dataSelect
       ext <- tools::file_ext(file$datapath)
       req(file)
@@ -102,13 +101,35 @@ mod_dataImport_server <- function(id) {
       } else {
         data <- read_xls(file$datapath)
       }
-      df(data)
-
-      if (!dir.exists("./temp")) {
-        dir.create("./temp")
-      }
-      save(data, file = paste0("./temp/", id, "_data_import.RData"))
+      # df(data)
+      #
+      # if (!dir.exists("./temp")) {
+      #   dir.create("./temp")
+      # }
+      # save(data, file = paste0("./temp/", id, "_data_import.RData"))
     })
+
+    df <- reactiveVal()
+
+    # observeEvent(input$dataImport, {
+    #   file <- input$dataSelect
+    #   ext <- tools::file_ext(file$datapath)
+    #   req(file)
+    #   validate(need(ext %in% c("csv", "xlsx", "xls"), "请导入csv 或 xlsx 或 xls格式文件"))
+    #   if (ext == "csv") {
+    #     data <- read.csv(file$datapath)
+    #   } else if (ext == "xlsx") {
+    #     data <- read_xlsx(file$datapath)
+    #   } else {
+    #     data <- read_xls(file$datapath)
+    #   }
+    #   df(data)
+    #
+    #   if (!dir.exists("./temp")) {
+    #     dir.create("./temp")
+    #   }
+    #   save(data, file = paste0("./temp/", id, "_data_import.RData"))
+    # })
 
     # 示例数据 ----
     observeEvent(input$dataExample, {
@@ -124,17 +145,107 @@ mod_dataImport_server <- function(id) {
 
 
     # # 数据导入对话框 ----
-    # observe({
-    #   showModal(
-    #     modalDialog(
-    #       title = "Somewhat important message",
-    #       easy_close = TRUE,
-    #       # "This is your important message."
-    #
-    #     )
-    #   )
-    # }) |>
-    #   bindEvent(input$dataImportModal)
+    observeEvent(input$dataImportModal, {
+      showModal(modalDialog(
+        # title = h4(strong("数据导入")),
+        easy_close = TRUE,
+        size = "l",
+        footer = tagList(
+          actionButton(
+            inputId = ns("cancelImportBtn"),
+            label = "取消导入数据",
+            class = "btn-danger",
+            width = "30%"
+          ),
+          actionButton(
+            inputId = ns("dataImportBtn"),
+            label = "确定导入数据",
+            class = "btn-success",
+            width = "30%"
+          )
+        ),
+
+        tabsetPanel(
+          id = "dm_tabs",
+          tabPanel(
+            title = "加载数据",
+            fileInput(
+              inputId = ns("dataSelect"),
+              label = strong("选择数据文件", style = "font-size:20px"),
+              accept = c(".csv", ".xlsx", ".xls"),
+              width = "100%",
+              buttonLabel = "浏览..."
+            ),
+
+            box(
+              title = strong("数据表格式设置", style = "font-size:20px"),
+              status = "success",
+              solidHeader = TRUE,
+              width = 12,
+              collapsible = FALSE,
+
+              column(
+                width = 6,
+                checkboxInput(
+                  inputId = ns("hasTitle"),
+                  label = "数据表包含标题",
+                  value = TRUE,
+                  width = "100%"
+                ),
+
+                textInput(
+                  inputId = ns("missValue"),
+                  label = "缺失值字符",
+                  value = ",NA",
+                  width = "100%",
+                  placeholder = "若数据有多种缺失值符号(如NA,na,NAN,nan等)，用逗号(',')分隔,如(,NA,nan)"
+                )
+              ),
+              column(
+                width = 6,
+                numericInput(
+                  inputId = ns("titleRowNum"),
+                  label = "标题所在行",
+                  value = 0,
+                  min = 0,
+                  step = 1,
+                  width = "100%"
+                ),
+
+              )
+            ),
+
+            DT::DTOutput(ns("dataTabPreview"))
+          ),
+          tabPanel(
+            title = "查看数据",
+          ),
+          tabPanel(
+            title = "修改数据",
+          )
+        )
+
+      ))
+    })
+
+    observeEvent(input$cancelImportBtn, {
+      removeModal()
+    })
+
+    observeEvent(input$dataImportBtn, {
+      # Check that data object exists and is data frame.
+      # if (!is.null(input$dataset) && nzchar(input$dataset) &&
+      #     exists(input$dataset) && is.data.frame(get(input$dataset))) {
+      #   vals$data <- get(input$dataset)
+      #   removeModal()
+      # } else {
+      #   showModal(dataModal(failed = TRUE))
+      # }
+      removeModal()
+    })
+
+
+
 
     # 数据集格式介绍对话框 ----
     observeEvent(input$dataFormatModal, {
@@ -159,9 +270,16 @@ mod_dataImport_server <- function(id) {
       str(df())
     })
 
+    # 数据表预览 ----
+    output$dataTabPreview = renderDT(
+      iris, options = list(lengthChange = FALSE)
+      # df1(), options = list(scrollX = TRUE)
+    )
+
     # 数据表展示 ----
-    output$dataTab = renderDT(# iris, options = list(lengthChange = FALSE)
-      df(), options = list(scrollX = TRUE))
+    # output$dataTab = renderDT(# iris, options = list(lengthChange = FALSE)
+    #   df(), options = list(scrollX = TRUE)
+    # )
   })
 }
 
