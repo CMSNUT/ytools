@@ -4,6 +4,7 @@
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @import shinydashboard
+#' @import tidyverse
 #' @noRd
 app_ui <- function(request) {
   tagList(
@@ -19,7 +20,7 @@ app_ui <- function(request) {
         sidebarMenu(
           # Setting id makes input$tabs give the tabName of currently-selected tab
           id = "tabs",
-          menuItem("生存分析", tabName = "kmPlot", icon = icon("dashboard")),
+          menuItem("生存分析", tabName = "survAnal", icon = icon("dashboard")),
           menuItem("Cox回归", tabName = "coxReg", icon = icon("dashboard")),
           menuItem("Logistic回归", tabName = "logiReg", icon = icon("dashboard"))
         )
@@ -28,23 +29,23 @@ app_ui <- function(request) {
         tabItems(
           # 生存分析 ----
           tabItem(
-            "kmPlot",
+            "survAnal",
             navbarPage(
               strong("生存分析",style = "color:blue;font-size:28px"),
               ## 生成曲线数据导入 ----
               tabPanel(
-                title = strong("数据导入",style = "font-size:16px"),
-                mod_dataImport_ui("km")
+               "数据导入",
+               mod_dataImport_ui("survAnal")
               ),
-              ## 生存曲线数据处理 ----
+              ## 生存曲线数据整理 ----
               tabPanel(
-                title = strong("数据处理",style = "font-size:16px"),
-                mod_dataProcess_ui("km")
+               title = "数据整理",
+               mod_dataProcess_ui("survAnal")
               ),
               ## 生存曲线绘制 ----
               tabPanel(
-                title = strong("KM曲线",style = "font-size:16px"),
-                mod_kmCurve_ui("km")
+               title = "KM曲线",
+               mod_km_ui("survAnal")
               )
             )
           ),
@@ -54,20 +55,19 @@ app_ui <- function(request) {
             "coxReg",
             navbarPage(
               strong("Cox回归分析",style = "color:blue;font-size:28px"),
-              ## Cox回归数据导入 ----
+              ## cox回归数据导入 ----
               tabPanel(
-                title = strong("数据导入",style = "font-size:16px"),
-                mod_dataImport_ui("cox")
+                "数据导入",
+                mod_dataImport_ui("coxReg")
               ),
-              ## Cox回归数据处理 ----
+              ## 生存曲线数据整理 ----
               tabPanel(
-                title = strong("数据处理",style = "font-size:16px"),
-                mod_dataProcess_ui("cox")
+                title = "数据整理",
+                mod_dataProcess_ui("coxReg")
               ),
-              ## COX比例风险模型 ----
+              ## 生存曲线绘制 ----
               tabPanel(
-                title = strong("COX比例风险模型",style = "font-size:16px"),
-                mod_regModel_ui("cox")
+                title = "Cox回归",
               )
             )
           ),
@@ -77,20 +77,19 @@ app_ui <- function(request) {
             "logiReg",
             navbarPage(
               strong("Logistic回归分析",style = "color:blue;font-size:28px"),
-              ## logi回归数据导入 ----
+              ## Logistic回归数据导入 ----
               tabPanel(
-                title = strong("数据导入",style = "font-size:16px"),
-                mod_dataImport_ui("logistic")
+                "数据导入",
+                mod_dataImport_ui("logiReg")
               ),
-              ## Logistic回归数据处理 ----
+              ## 生存曲线数据整理 ----
               tabPanel(
-                title = strong("数据处理",style = "font-size:16px"),
-                mod_dataProcess_ui("logistic")
+                title = "数据整理",
+                mod_dataProcess_ui("logiReg")
               ),
-              ## Logistic回归模型 ----
+              ## 生存曲线绘制 ----
               tabPanel(
-                title = strong("Logistic回归模型",style = "font-size:16px"),
-                mod_regModel_ui("logistic")
+                title = "Logistic回归"
               )
             )
           )

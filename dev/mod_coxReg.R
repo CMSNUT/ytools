@@ -1,4 +1,4 @@
-#' dataProcess UI Function
+#' coxReg UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,17 +7,17 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
-mod_dataProcess_ui <- function(id) {
+mod_coxReg_ui <- function(id) {
   ns <- NS(id)
   tagList(
  
   )
 }
     
-#' dataProcess Server Functions
+#' coxReg Server Functions
 #'
 #' @noRd 
-mod_dataProcess_server <- function(id){
+mod_coxReg_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
  
@@ -25,7 +25,7 @@ mod_dataProcess_server <- function(id){
 }
     
 ## To be copied in the UI
-# mod_dataProcess_ui("dataProcess_1")
+# mod_coxReg_ui("coxReg_1")
     
 ## To be copied in the server
-# mod_dataProcess_server("dataProcess_1")
+# mod_coxReg_server("coxReg_1")

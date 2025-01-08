@@ -12,8 +12,8 @@ Imports:
     readxl,
     shiny,
     shinydashboard,
-    stringr,
     survival,
+    tidyverse,
     tools
 Suggests: 
     testthat (>= 3.0.0)

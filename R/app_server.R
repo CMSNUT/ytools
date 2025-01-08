@@ -9,17 +9,13 @@ app_server <- function(input, output, session) {
   # Your application server logic
 
   # 生存分析 ----
-  data<-mod_dataImport_server("survAnal")
-  print(data)
-  mod_dataProcess_server("survAnal")
-  mod_km_server("survAnal")
+  df <- mod_dataImport_server("km")
+  # df2 <- mod_dataProcess_server("km")
 
-  # Cox回归分析
-  mod_dataImport_server("coxReg")
-  mod_dataProcess_server("coxReg")
 
-  # Logistic回归分析
-  mod_dataImport_server("logiReg")
-  mod_dataProcess_server("logiReg")
+  # Cox回归分析 ----
+
+  # Logistic回归分析 ----
+
 
 }
