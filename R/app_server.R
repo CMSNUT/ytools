@@ -11,6 +11,8 @@ app_server <- function(input, output, session) {
   # 生存分析 ----
   df <- mod_dataImport_server("km")
   df2 <- mod_dataProcess_server("km",df)
+  mod_kmCurve_server("km",df2)
+
 
   # observe({
   #   print(str(df2()))
@@ -21,8 +23,16 @@ app_server <- function(input, output, session) {
 
 
   # Cox回归分析 ----
+  df <- mod_dataImport_server("cox")
+  df2 <- mod_dataProcess_server("cox",df)
+  mod_regModel_server("cox",df2)
+
 
   # Logistic回归分析 ----
+
+  df <- mod_dataImport_server("logistic")
+  df2 <- mod_dataProcess_server("logistic",df)
+  mod_regModel_server("logistic",df2)
 
 
 }

@@ -145,8 +145,8 @@ mod_dataProcess_server <- function(id, df) {
           radioGroupButtons(
             ns("modifyMethod"),
             strong("因子变量标签修改方式",style="color:blue;font-size=20px"),
-            choices = c("修改后的值为新列" = "addNew","直接在原列上修改"="notNew"),
-            selected = "addNew",
+            choices = c("直接在原列上修改"="notNew","生成新变量(列)" = "addNew"),
+            selected = "notNew",
             checkIcon = list(
               yes = icon("square-check"),
               no = icon("square")
@@ -207,11 +207,25 @@ mod_dataProcess_server <- function(id, df) {
 
     # 分类变量标签重置 ----
 
-    observe({
+    observeEvent(input$setFactorVarsLabel,{
       dm2 <- df1()
 
+      input_lst <- reactiveValuesToList(input)
+      my_dataframe <- as.data.frame(t(sapply(input_lst, "[", i = 1:max(
+        sapply(input_lst, length)
+      ))))
+
+      if (sum(str_which(colnames(my_dataframe), "labstxt")) >0) {
+        for (i in 1:length(str_which(colnames(my_dataframe), "labstxt"))) {
+          removeUI(
+            selector = paste0("div:has(> #", ns("labstxt"),i)
+          )
+        }
+      }
+
       if ((!is.null(input$setFactorVarsLabel)) &&
-          input$setFactorVarsLabel %in% allVars()) {
+          input$setFactorVarsLabel %in% allVars()){
+
         lbs <- unique(dm2[, input$setFactorVarsLabel])
         for (i in 1:length(lbs)) {
           insertUI(
@@ -219,7 +233,7 @@ mod_dataProcess_server <- function(id, df) {
             where = "beforeBegin",
             ui = textInput(paste0(ns(
               "labstxt"
-            ), i), paste0("Insert some text", i), value = lbs[i])
+            ), i), paste0("修改变量标签 ", i," 的值"), value = lbs[i])
           )
         }
       }
@@ -230,13 +244,39 @@ mod_dataProcess_server <- function(id, df) {
       my_dataframe <- as.data.frame(t(sapply(input_lst, "[", i = 1:max(
         sapply(input_lst, length)
       ))))
-      # %>% as.data.frame
-      tt <- my_dataframe[, str_which(colnames(my_dataframe), "labstxt")] %>%
-        sapply(., as.data.frame) %>% as.data.frame %>% na.omit(.) %>% as.character
-      print(tt)
-      save(tt, file = "mydata.RData")
 
-      print(input$modifyMethod)
+      # %>% as.data.frame
+      newLables <- my_dataframe[, str_which(colnames(my_dataframe), "labstxt")] %>%
+        sapply(., as.data.frame) %>% as.data.frame %>% na.omit(.) %>% as.character
+      # print(newLables)
+      # save(newLables, file = "mydata.RData")
+
+      dm3 <- df1()
+
+      lbs <- unique(dm3[, input$setFactorVarsLabel]) %>% as.character
+
+      if (input$modifyMethod == "notNew") {
+        dm3[,input$setFactorVarsLabel] <- as.character(dm3[,input$setFactorVarsLabel])
+        for (i in 1:length(lbs)) {
+          dm3[input$setFactorVarsLabel][dm3[input$setFactorVarsLabel] == lbs[i]] <- newLables[i]
+        }
+        dm3[,input$setFactorVarsLabel] <- as.factor(dm3[,input$setFactorVarsLabel])
+      } else if (input$modifyMethod == "addNew") {
+        newVar <- paste("new",input$setFactorVarsLabel,sep = "_")
+
+        dm3[,newVar] <- dm3[,input$setFactorVarsLabel]
+
+        dm3[,newVar] <- as.character(dm3[,newVar])
+
+        for (i in 1:length(lbs)) {
+          dm3[newVar][dm3[newVar] == lbs[i]] <- newLables[i]
+        }
+        dm3[,newVar] <- as.factor(dm3[,newVar])
+      }
+
+      df1(dm3)
+
+      # print(input$modifyMethod)
       # print(t[,str_which(colnames(t),ns("labstxt"))]%>% as.character)
     })
 
