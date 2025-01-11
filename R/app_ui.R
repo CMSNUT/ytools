@@ -4,6 +4,9 @@
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @import shinydashboard
+#' @import survival
+#' @import shinyWidgets
+#' @import stringr
 #' @noRd
 app_ui <- function(request) {
   tagList(

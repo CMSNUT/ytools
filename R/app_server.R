@@ -10,6 +10,13 @@ app_server <- function(input, output, session) {
 
   # 生存分析 ----
   df <- mod_dataImport_server("km")
+  df2 <- mod_dataProcess_server("km",df)
+
+  # observe({
+  #   print(str(df2()))
+  # })
+
+
   # df2 <- mod_dataProcess_server("km")
 
 

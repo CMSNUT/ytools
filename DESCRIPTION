@@ -9,11 +9,14 @@ Imports:
     config,
     DT,
     golem,
+    magrittr,
+    purrr,
     readxl,
     shiny,
     shinydashboard,
+    shinyWidgets,
+    stringr,
     survival,
-    tidyverse,
     tools
 Suggests: 
     testthat (>= 3.0.0)
